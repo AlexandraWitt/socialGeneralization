@@ -9,7 +9,7 @@
 #SBATCH --error=hostname_%j.err   # File to which STDERR will be written - make sure this is not on $HOME
 #SBATCH --mail-type=ALL           # Type of email notification- BEGIN,END,FAIL,ALL
 #SBATCH --mail-user=alexandra.witt@gmx.net   # Email to which notifications will be sent
-#SBATCH --array=30-39
+#SBATCH --array=0-149
 
 
 # print info about current job

@@ -13,7 +13,7 @@ import numpy as np
 import modelSim as ms
 
 path = ('./environments' ) 
-json_files = [file for file in os.listdir(path) if file.endswith('_canon.json')]
+json_files = [file for file in os.listdir(path) if file.endswith('_c08.json')]
 envList = []
 for file in json_files:
     f=open(os.path.join(path, file))
@@ -159,11 +159,11 @@ for gen in range(1,generations):
     outputList.append(newPop)
     
     
-path = "./Data/evoSims/evoSim/"
+path = "./Data/evoSims/corr08/"
 if not os.path.exists(path):
     os.makedirs(path)
-filename = path+name+"_VSmem_"+str(mix) 
+filename = path+name+"_c08_"+str(mix) 
 np.save(filename,outputList)
 
-filename = path+name+"_VSmem_"+str(mix)+"_scores"
+filename = path+name+"_c08_"+str(mix)+"_scores"
 np.save(filename,scoreboard)

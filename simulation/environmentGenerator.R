@@ -8,7 +8,7 @@ invisible(lapply(packages, require, character.only = TRUE))
 #Globally fixed prameters
 gridSize <- 11
 xstar <- expand.grid(x=1:gridSize, y = 1:gridSize) #input space
-lambda <- 1.5 #length scale
+lambda <- 2 #length scale
 
 #########################################################################################################################
 # Gaussian Process functions
@@ -67,7 +67,7 @@ normalize <- function(x){(x-min(x))/(max(x)-min(x))}
 # Sample non-socially correlated environments from the GP prior
 #########################################################################################################################
 #Parameters
-n_envs <- 3
+n_envs <- 10
 # compute kernel on pairwise values
 Sigma <- rbf_D(xstar,l=lambda)
 # sample from multivariate normal with mean zero, sigma = sigma
@@ -86,9 +86,9 @@ for (i in 1:n_envs){
 }
 #Save plots
 payoffplots <- cowplot::plot_grid(plotlist = plot_list, ncol = 8)
-ggsave('plots/M0_l1507_demo.pdf', payoffplots, width = 12, height = 8)
+ggsave('plots/M0_c00.pdf', payoffplots, width = 12, height = 8)
 #Save environments
-write_json(environmentList, 'environments/M0_l1507_demo.json')
+write_json(environmentList, 'environments/M0_c00.json')
 
 
 #########################################################################################################################
@@ -97,21 +97,21 @@ write_json(environmentList, 'environments/M0_l1507_demo.json')
 # Then sample individual payoff functions from a GP where the mean is defined but the variance is still the prior variance
 #########################################################################################################################
 #Simulation parameters
-genNum <- 100000
+genNum <- 10000
 n_players <- 4
-n_envs <-40
-correlationThreshold <- .6
+n_envs <- 10
+correlationThreshold <- .0
 tolerance <- .05
-childNames = c('A', 'B', 'C')
+childNames = c('A', 'B', 'C', 'D')
 
 # compute kernel on pairwise values
 Sigma_social <- rbf_D(xstar,l=lambda)
 
 #M0 generated above are the canonical environments
-M <-fromJSON("environments/M0_l1507_demo.json", flatten=TRUE) #load from above
+M <-fromJSON("environments/M0_c00.json", flatten=TRUE) #load from above
 
-childEnvList = list(A=list(), B=list(), C=list())
-plot_list = list(list(), list(), list())
+childEnvList = list(A=list(), B=list(), C=list(), D=list())
+plot_list = list(list(), list(), list(), list())
 #Sample functions from the new prior mean is defined by the canonical environment
 for (i in 1:n_envs){
   Z_n <- MASS::mvrnorm(genNum,M[[i]][,'payoff'], Sigma_social, ) #generate many candidates
@@ -128,22 +128,23 @@ for (i in 1:n_envs){
     }
     #Check that all correlations fall within the correlation threshold with A? tolerance
     checked <- sum((cors>=(correlationThreshold-tolerance)) & (cors<=(correlationThreshold+tolerance)))
-    if (checked==2){ #now repeat for environment B (with C&D, no need to check AB again --> 2)
+    if (checked==3){ #now repeat for environment B (with C&D, no need to check AB again --> 2)
       for (k in 3:n_players){
         cors <- c(cors,cor(Z_n[candidates[2],],Z_n[candidates[k],]))
       }
       checked <- sum((cors>=(correlationThreshold-tolerance)) & (cors<=(correlationThreshold+tolerance)))
-      if (checked==3){
-        found <- T
+      # if (checked==5){
+      #   #found <- T
+      #   #print("found one")
+      # }
+      if (checked==5){#finally, check correlation of C&D
+        cors <- c(cors,cor(Z_n[candidates[3],],Z_n[candidates[4],]))
+      }
+      checked <- sum((cors>=(correlationThreshold-tolerance)) & (cors<=(correlationThreshold+tolerance)))
+      if (checked==6){ #all 6 combinations checked --> conditions fulfilled, add to list
+        found<-TRUE
         print("found one")
       }
-      # if (checked==5){#finally, check correlation of C&D
-      #   cors <- c(cors,cor(Z_n[candidates[3],],Z_n[candidates[4],]))
-      # }
-      # checked <- sum((cors>=(correlationThreshold-tolerance)) & (cors<=(correlationThreshold+tolerance)))
-      # if (checked==6){ #all 6 combinations checked --> conditions fulfilled, add to list
-      #   found<-TRUE
-      # }
     }
   }
   Z_n <- Z_n[candidates,]
@@ -162,12 +163,12 @@ for (i in 1:n_envs){
 for (child in childNames){
   i <- match(child, childNames)
   payoffplots <- cowplot::plot_grid(plotlist = plot_list[[i]], ncol = 8)
-  ggsave(paste0('plots/', child,'_l1507_demo.pdf'), payoffplots, width = 12, height = 8)  
+  ggsave(paste0('plots/', child,'_c00.pdf'), payoffplots, width = 12, height = 8)  
 }
 
 #Save environments
 for (child in childNames){
-  write_json(childEnvList[[child]], paste0('environments/', child,'_l1507_demo.json'))
+  write_json(childEnvList[[child]], paste0('environments/', child,'_c00.json'))
 }
  
 # #########################################################################################################################
@@ -197,11 +198,11 @@ for (child in childNames){
 # #######################################################################################################################
 # Correlation sanity checks
 # #######################################################################################################################
-M <-fromJSON("environments/M0.json", flatten=TRUE)
+M <-fromJSON("environments/M0_c00.json", flatten=TRUE)
 envs <- c('A','B','C','D') #, 'D'
 envList <- vector('list',length(envs))
 for (env in envs){
-  envList[[match(env,envs)]] <- fromJSON(paste0("environments/",env,"_test.json"), flatten=TRUE)
+  envList[[match(env,envs)]] <- fromJSON(paste0("environments/",env,"_c00.json"), flatten=TRUE)
 }
 
 #parent child correlations
@@ -252,7 +253,7 @@ ggplot(cor_cc,aes(x=cor_cc)) +
   geom_vline(aes(xintercept = correlationThreshold+tolerance,color="red"))+
   theme(legend.position = 'None')+
   xlab('Correlation among child environments')+
-  xlim(0,1)+
+  xlim(-0.1,1)+
   ylab('n')
 ggsave("./plots/cpr_cc.pdf")
 
