@@ -13,7 +13,7 @@ import numpy as np
 import modelSim as ms
 
 path = ('./environments' ) 
-json_files = [file for file in os.listdir(path) if file.endswith('_c08.json')]
+json_files = [file for file in os.listdir(path) if file.endswith('_c09.json')]
 envList = []
 for file in json_files:
     f=open(os.path.join(path, file))
@@ -35,6 +35,7 @@ typeMutation = 0.002*(4/3)
 mix = int(sys.argv[1])
 outputList = [] #Store the outputs
 scoreboard  =[] #Store scores
+np.random.seed(2024+mix)
 
 if mix in range(10):
     name = "AS"
@@ -132,11 +133,11 @@ for gen in range(1,generations):
             newPop[i][0]['beta'] = np.random.lognormal(-0.75,0.5)
         if newPop[i][0]['tau'] <0:
             newPop[i][0]['tau'] = np.random.lognormal(-4.5,0.9)
-        if newPop[i][0]['gamma']!=0 and newPop[i][0]['gamma']<1/14 or newPop[i][0]['gamma'] > 1:
-            newPop[i][0]['gamma'] = np.random.uniform(1/14,1)
-        if newPop[i][0]['alpha']!=0 and newPop[i][0]['alpha']<1/14 or newPop[i][0]['alpha'] > 1:
-            newPop[i][0]['alpha'] = np.random.uniform(1/14,1)
-        if newPop[i][0]['eps_soc']<0:
+        if newPop[i][0]['gamma']!=0 and newPop[i][0]['gamma']<0.21428 or newPop[i][0]['gamma'] > 1:
+            newPop[i][0]['gamma'] = np.random.uniform(0.21428,1)
+        if newPop[i][0]['alpha']!=0 and newPop[i][0]['alpha']<0.116 or newPop[i][0]['alpha'] > 1:
+            newPop[i][0]['alpha'] = np.random.uniform(0.116,1)
+        if newPop[i][0]['eps_soc']<0 or newPop[i][0]['eps_soc']>19:
             newPop[i][0]['eps_soc'] = np.random.exponential(2)
 
     for i in range(popSize):
@@ -151,19 +152,20 @@ for gen in range(1,generations):
             # newPop[i][0]['tau'] = np.random.lognormal(-4.5,0.9)
             model = np.random.randint(0,4)
             if model == 1:
-                newPop[i][0]["gamma"] = np.random.uniform(1/14,1)
+                newPop[i][0]["gamma"] = np.random.uniform(0.21428,1)
             elif model==2:
-                newPop[i][0]["alpha"]=np.random.uniform(1/14,1)
+                newPop[i][0]["alpha"]=np.random.uniform(0.116,1)
             elif model==3:
-                newPop[i][0]['eps_soc'] = np.random.exponential(2)
+                while newPop[i][0]['eps_soc']==0 or newPop[i][0]['eps_soc']>19:
+                    newPop[i][0]['eps_soc'] = np.random.exponential(2)
     outputList.append(newPop)
     
     
-path = "./Data/evoSims/corr08/"
+path = "./Data/evoSims/corr09/"
 if not os.path.exists(path):
     os.makedirs(path)
-filename = path+name+"_c08_"+str(mix) 
+filename = path+name+"_c09_"+str(mix) 
 np.save(filename,outputList)
 
-filename = path+name+"_c08_"+str(mix)+"_scores"
+filename = path+name+"_c09_"+str(mix)+"_scores"
 np.save(filename,scoreboard)
