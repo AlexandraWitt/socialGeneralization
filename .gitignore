@@ -54,22 +54,7 @@ Data - Kopie/
 #add files above the size limit
 /Data/data_VSmem_filteredsame.csv
 /Data/data_VSmem_regressable_filtered_d1.csv
-/Data/evoSim_3way.csv
-/Data/evoSim_different_winners.csv
-/Data/evoSim_l0s1_reprior.csv
-/Data/evoSim_Najar.csv
-/Data/evoSim_Najar_VSmean.csv
-/Data/evoSim_pacifism.csv
-/Data/evoSim_randomfatality.csv
-/Data/evoSim_VSasSG0.csv
-/Data/evoSim_VSasSGepssoc0_r1.csv
-/Data/evoSim_VSasSG_epsbounded.csv
-/Data/evoSim_VSasSG_epsbounded_r06.csv
-/Data/evoSim_VSasSG_epsbounded_r1.csv
-/Data/evoSim.csv
-/Data/evoSim_VSmem_fresh.csv
-/Data/evoSim_VSmem_highprior.csv
-/Data/evoSim_winneringroup.csv
+/Data/evoSim*csv
 /Data/GP_het_400_VSSG_regressable.csv
 /Data/GP_het_400_regressable.csv
 /Data/GP_fitpars*

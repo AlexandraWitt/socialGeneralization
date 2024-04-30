@@ -2,7 +2,7 @@
 #Charley Wu (Jan 2020)
 
 rm(list=ls())
-packages<-c("plyr", 'plgp', 'cowplot', 'matrixcalc', 'rdist', 'ggplot2' , 'viridis', 'jsonlite', 'CCA')
+packages<-c("plyr", 'cowplot', 'rdist', 'ggplot2' , 'viridis', 'jsonlite')
 invisible(lapply(packages, require, character.only = TRUE))
 
 #Globally fixed prameters
@@ -86,9 +86,9 @@ for (i in 1:n_envs){
 }
 #Save plots
 payoffplots <- cowplot::plot_grid(plotlist = plot_list, ncol = 8)
-ggsave('plots/M0_c00.pdf', payoffplots, width = 12, height = 8)
+ggsave('plots/M0_c09.pdf', payoffplots, width = 12, height = 8)
 #Save environments
-write_json(environmentList, 'environments/M0_c00.json')
+write_json(environmentList, 'environments/M0_c09_parent.json')
 
 
 #########################################################################################################################
@@ -97,10 +97,10 @@ write_json(environmentList, 'environments/M0_c00.json')
 # Then sample individual payoff functions from a GP where the mean is defined but the variance is still the prior variance
 #########################################################################################################################
 #Simulation parameters
-genNum <- 10000
+genNum <- 5000000
 n_players <- 4
 n_envs <- 10
-correlationThreshold <- .0
+correlationThreshold <- .9
 tolerance <- .05
 childNames = c('A', 'B', 'C', 'D')
 
@@ -108,7 +108,7 @@ childNames = c('A', 'B', 'C', 'D')
 Sigma_social <- rbf_D(xstar,l=lambda)
 
 #M0 generated above are the canonical environments
-M <-fromJSON("environments/M0_c00.json", flatten=TRUE) #load from above
+M <-fromJSON("environments/M0_c09_parent.json", flatten=TRUE) #load from above
 
 childEnvList = list(A=list(), B=list(), C=list(), D=list())
 plot_list = list(list(), list(), list(), list())
@@ -117,7 +117,7 @@ for (i in 1:n_envs){
   Z_n <- MASS::mvrnorm(genNum,M[[i]][,'payoff'], Sigma_social, ) #generate many candidates
   cors<- sapply(1:genNum, FUN = function(k) cor(M[[i]][,'payoff'], Z_n[k,])) #compute correlations with canonical environment
   #remove environments with correlations lower than threshold with canonical
-  Z_n <- Z_n[cors>correlationThreshold,]
+  Z_n <- Z_n[cors>correlationThreshold,] #-0.15 for .9 because we lose too many envs otherwise
   #Try to find a set of 4 environments, where all envs have above threshold correlations amongst each other
   found <- FALSE 
   while (found==FALSE){
@@ -163,12 +163,12 @@ for (i in 1:n_envs){
 for (child in childNames){
   i <- match(child, childNames)
   payoffplots <- cowplot::plot_grid(plotlist = plot_list[[i]], ncol = 8)
-  ggsave(paste0('plots/', child,'_c00.pdf'), payoffplots, width = 12, height = 8)  
+  ggsave(paste0('plots/', child,'_c09.pdf'), payoffplots, width = 12, height = 8)  
 }
 
 #Save environments
 for (child in childNames){
-  write_json(childEnvList[[child]], paste0('environments/', child,'_c00.json'))
+  write_json(childEnvList[[child]], paste0('environments/', child,'_c09.json'))
 }
  
 # #########################################################################################################################
@@ -198,11 +198,11 @@ for (child in childNames){
 # #######################################################################################################################
 # Correlation sanity checks
 # #######################################################################################################################
-M <-fromJSON("environments/M0_c00.json", flatten=TRUE)
+M <-fromJSON("environments/M0_c09_parent.json", flatten=TRUE)
 envs <- c('A','B','C','D') #, 'D'
 envList <- vector('list',length(envs))
 for (env in envs){
-  envList[[match(env,envs)]] <- fromJSON(paste0("environments/",env,"_c00.json"), flatten=TRUE)
+  envList[[match(env,envs)]] <- fromJSON(paste0("environments/",env,"_c09.json"), flatten=TRUE)
 }
 
 #parent child correlations

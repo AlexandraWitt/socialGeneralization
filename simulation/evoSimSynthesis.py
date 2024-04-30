@@ -56,3 +56,5 @@ evo_data['model'] = np.select([ (evo_data['alpha']==0) & (evo_data['gamma']==0) 
                         (evo_data['alpha']!=0),
                         (evo_data['eps_soc']!=0)],
                         ['AS','DB','VS','SG'])#
+
+evo_data.to_csv('./Data/evoSim.csv', index=False)
