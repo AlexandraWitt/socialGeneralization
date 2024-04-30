@@ -4,7 +4,6 @@
 library(ggplot2)
 library(dplyr)
 library(ggtern)
-library(reshape)
 library(viridis)
 library(tidyr)
 library(cowplot)
@@ -12,17 +11,11 @@ library(lme4)
 library(lmerTest)
 library(ggbeeswarm)
 
-library(ggExtra)
-library(gridExtra)
 library(ggsignif)
-library(ggdist)
-library(gghalves)
 library(viridis)
 library(brms)
 library(sjPlot)
-library(ggpubr)
 
-setwd("D:/PhD/Code/socialGeneralization")
 saveAll <- F
 cbPalette <- c("#999999","#E69F00", "#009E73","#56B4E9", "#CC79A7", "#F0E442", "#0072B2", "#D55E00")#
 
@@ -221,13 +214,13 @@ data$dist <- factor(data$dist,levels=c("0","1","2",">=3"))
 data$rew_bins <- round(data$soc_rew*50)/50
 pdata_grp <- subset(data,social==1&!is.na(soc_rew)&taskType=="social") #social==1&dist=='0'|social==1&dist=='1'
 
-freqs <- pdata_grp%>%group_by(rew_bins,dist)%>%summarize(n=n(),dist=unique(dist))%>%mutate(freq=n/sum(n))
+freqs <- pdata_grp%>%group_by(rew_bins,dist)%>%dplyr::summarize(n=n(),dist=unique(dist))%>%mutate(freq=n/sum(n))
 freqs$dist <- factor(freqs$dist,levels=c("0","1","2",">=3"))
 freqs_group <- freqs
 
 pdata_ind <- subset(data,social==1&!is.na(soc_rew)&taskType=="individual") #social==1&dist=='0'|social==1&dist=='1'
 
-freqs <- pdata_ind%>%group_by(rew_bins,dist)%>%summarize(n=n(),dist=unique(dist))%>%mutate(freq=n/sum(n))
+freqs <- pdata_ind%>%group_by(rew_bins,dist)%>%dplyr::summarize(n=n(),dist=unique(dist))%>%mutate(freq=n/sum(n))
 freqs$dist <- factor(freqs$dist,levels=c("0","1","2",">=3"))
 
 freqs$taskType <-  "Solo"

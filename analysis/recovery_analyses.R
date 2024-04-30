@@ -15,7 +15,7 @@ addSmallLegend <- function(myPlot, pointSize = 0.5, textSize = 3, spaceLegend = 
           legend.key.size = unit(spaceLegend, "lines"))
 }
 
-setwd("C:/PhD/Code/socialGeneralization/Data/recovery_data/mrecov")
+setwd("./Data/recovery_data/mrecov")
 data <- read.csv("mrecov.csv")
 
 data$model=factor(data$model,levels=c("AS","DB","VS","SG"))
@@ -140,7 +140,7 @@ ggsave("C:/PhD/Code/socialGeneralization/plots/precovery.pdf",width=10,height=7.
 
 #bounding
 
-setwd("C:/PhD/Code/socialGeneralization")
+setwd("../../../")
 #DB - 
 sim_data = read.csv("./Data/GP_het_400_regressable.csv") 
 #ignore random trials

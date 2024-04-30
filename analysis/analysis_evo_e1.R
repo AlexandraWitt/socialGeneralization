@@ -3,25 +3,20 @@
 library(ggplot2)
 library(dplyr)
 library(ggtern)
-library(reshape)
 library(viridis)
 library(tidyr)
 library(cowplot)
 library(lme4)
 library(lmerTest)
-library(ggbeeswarm)
 
-library(ggExtra)
 library(gridExtra)
 library(ggsignif)
-library(ggdist)
-library(gghalves)
+library(ggbeeswarm)
+library(bayestestR)
 library(viridis)
 library(brms)
 library(sjPlot)
-library(ggpubr)
 
-setwd("C:/PhD/Code/socialGeneralization")
 saveAll <- F
 cbPalette <- c("#999999","#E69F00", "#009E73","#56B4E9", "#CC79A7", "#F0E442", "#0072B2", "#D55E00")#
 ####extra imports and functions #######
@@ -308,24 +303,29 @@ if (saveAll){ggsave("./plots/soc_sd_prev_rew_e1.pdf",plot=p)}
 data$dist <- sapply(1:dim(data)[1], function(x) ifelse(data[x,"soc_sd"]==0,"0",ifelse(data[x,"soc_sd"]==1,"1",ifelse(data[x,"soc_sd"]<3,"2",">=3"))))
 data$dist <- factor(data$dist,levels=c("0","1","2",">=3"))
 
-data$rew_bins <- round(data$soc_rew*50)/50
+data$socvalue <- data$soc_rew - data$prev_rew
+data$rew_bins <- round(data$socvalue*100)/100
 pdata <- subset(data,social==1&!is.na(soc_rew)) #social==1&dist=='0'|social==1&dist=='1'
-
-freqs <- pdata%>%group_by(rew_bins,dist)%>%summarize(n=n(),dist=unique(dist))%>%mutate(freq=n/sum(n))
+pdata$socvalue <- pdata$soc_rew - pdata$prev_rew
+freqs <- subset(pdata)%>%group_by(rew_bins,dist)%>%summarize(n=n(),dist=unique(dist))%>%mutate(freq=n/sum(n))
+freqs <- left_join(freqs, pdata %>% count(dist) %>% mutate(base_freq = n / sum(n)) %>% select(dist, base_freq), by = "dist")
+freqs <- left_join(freqs,pdata %>% count(rew_bins) %>% mutate(rew_bin_freq = n / sum(n)) %>% select(rew_bins, rew_bin_freq), by = "rew_bins")
+freqs$freq <- freqs$freq/freqs$rew_bin_freq
 freqs$dist <- factor(freqs$dist,levels=c("0","1","2",">=3"))
 colors <- c("#ff7f00","#425e8a")
-(soc_sd <- ggplot(subset(freqs,dist=="0"|dist=="1"),aes(x=rew_bins,y=freq,color=dist,fill=dist))+ # subset(freqs,dist!=">=3")
+(soc_sd <- ggplot(subset(freqs,dist=="0"|dist=="1"),aes(x=rew_bins,y=freq/base_freq,color=dist,fill=dist))+ # subset(freqs,dist!=">=3")
   geom_point(alpha=0.8)+
   geom_smooth(method="lm")+
   theme_classic()+
   ylab("P(soc. search dist.)")+
   xlab("Previous social reward")+
+  xlim(c(0.5,1))+
   theme(legend.position = c(0.35,0.75),legend.background = element_blank(),
         legend.key = element_blank())+
   scale_fill_manual(values = colors,name="Search distance")+
   scale_color_manual(values = colors,name="Search distance")) #,end=.8
 
-soc_sd_test <- lm(freq~rew_bins*dist,data=subset(freqs,dist=="0"|dist=="1"))
+soc_sd_test <- lm(freq/base_freq~rew_bins*dist,data=subset(freqs,dist=="0"&rew_bins>0.5|dist=="1"&rew_bins>0.5))
 summary(soc_sd_test)
 
 soc_sd_split = run_model(brm(freq~rew_bins*dist,

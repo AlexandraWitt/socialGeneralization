@@ -4,7 +4,6 @@
 library(ggplot2)
 library(dplyr)
 library(ggtern)
-library(reshape)
 library(viridis)
 library(tidyr)
 library(cowplot)
@@ -12,18 +11,12 @@ library(lme4)
 library(lmerTest)
 library(ggbeeswarm)
 
-library(ggExtra)
-library(gridExtra)
-library(ggsignif)
-library(ggdist)
-library(gghalves)
 library(ggeffects)
+library(ggsignif)
 library(viridis)
 library(brms)
 library(sjPlot)
-library(ggpubr)
 
-setwd("D:/PhD/Code/socialGeneralization")
 saveAll <- F
 cbPalette <- c("#999999","#E69F00", "#009E73","#56B4E9", "#CC79A7", "#F0E442", "#0072B2", "#D55E00")#
 ####extra imports and functions #######
@@ -323,7 +316,7 @@ pilot_data <- read.csv("./Data/e1_data.csv")
 pilot_data = pilot_data[order(pilot_data$agent,pilot_data$group,pilot_data$round,pilot_data$trial),]
 pilot_data$id <-  pilot_data %>% group_by(agent,group) %>% group_indices()
 
-meandata <- pilot_data%>%group_by(round,group)%>%summarise(meanReward =mean(reward),coherence=mean(coherence), prev_rew = mean(prev_rew),
+meandata <- pilot_data%>%group_by(round,group)%>%dplyr::summarize(meanReward =mean(reward),coherence=mean(coherence), prev_rew = mean(prev_rew),
                                                            search_dist=mean(search_dist),variance=mean(variance),
                                                            soc_sd1 = mean(soc_sd1), soc_sd2 = mean(soc_sd2), soc_sd3 = mean(soc_sd3), soc_sd = mean(soc_sd),
                                                            soc_rew1 = mean(soc_rew1), soc_rew2 = mean(soc_rew2),soc_rew3 = mean(soc_rew3),soc_rew = mean(soc_rew))
@@ -343,7 +336,7 @@ if (saveAll){ggsave("./plots/lc_rounds.pdf")}
 
 #exclude random choices from analysis
 pilot_data <-  subset(pilot_data,trial!=0 & isRandom==0)
-meandata <- pilot_data%>%group_by(round,id)%>%summarise(meanReward =mean(reward),coherence=mean(coherence), prev_rew = mean(prev_rew),
+meandata <- pilot_data%>%group_by(round,id)%>%dplyr::summarize(meanReward =mean(reward),coherence=mean(coherence), prev_rew = mean(prev_rew),
                                                         search_dist=mean(search_dist),variance=mean(variance),
                                                         soc_sd1 = mean(soc_sd1), soc_sd2 = mean(soc_sd2), soc_sd3 = mean(soc_sd3), soc_sd = mean(soc_sd),
                                                         soc_rew1 = mean(soc_rew1), soc_rew2 = mean(soc_rew2),soc_rew3 = mean(soc_rew3),soc_rew = mean(soc_rew))
@@ -358,7 +351,7 @@ pilot_data = pilot_data[order(pilot_data$agent,pilot_data$group,pilot_data$round
 pilot_data$id <-  pilot_data %>% group_by(agent,group) %>% group_indices()
 
 pilot_data$blockOrder <- factor(pilot_data$blockOrder,levels=c("S-I","I-S"))
-meandata <- pilot_data%>%group_by(group,round,blockOrder)%>%summarise(meanReward =mean(reward),coherence=mean(coherence), prev_rew = mean(prev_rew),
+meandata <- pilot_data%>%group_by(group,round,blockOrder)%>%dplyr::summarize(meanReward =mean(reward),coherence=mean(coherence), prev_rew = mean(prev_rew),
                                                                       search_dist=mean(search_dist),variance=mean(variance),
                                                                       soc_sd1 = mean(soc_sd1), soc_sd2 = mean(soc_sd2), soc_sd3 = mean(soc_sd3), soc_sd = mean(soc_sd),
                                                                       soc_rew1 = mean(soc_rew1), soc_rew2 = mean(soc_rew2),soc_rew3 = mean(soc_rew3),soc_rew = mean(soc_rew))
@@ -384,7 +377,7 @@ meandata$blockOrder <- factor(meandata$blockOrder,levels=c("Group first","Solo f
 
 #exclude random choices for analysis
 pilot_data <-  subset(pilot_data,trial!=0 & isRandom==0)
-meandata <- pilot_data%>%group_by(id,round,blockOrder)%>%summarise(meanReward =mean(reward),coherence=mean(coherence), prev_rew = mean(prev_rew),
+meandata <- pilot_data%>%group_by(id,round,blockOrder)%>%dplyr::summarize(meanReward =mean(reward),coherence=mean(coherence), prev_rew = mean(prev_rew),
                                                                    search_dist=mean(search_dist),variance=mean(variance),
                                                                    soc_sd1 = mean(soc_sd1), soc_sd2 = mean(soc_sd2), soc_sd3 = mean(soc_sd3), soc_sd = mean(soc_sd),
                                                                    soc_rew1 = mean(soc_rew1), soc_rew2 = mean(soc_rew2),soc_rew3 = mean(soc_rew3),soc_rew = mean(soc_rew))
@@ -411,7 +404,7 @@ expl_eff = run_model(brm(expl_eff ~ soc_value * social + trial + (1 + soc_value 
                          control = list(adapt_delta = 0.99,max_treedepth = 20)), modelName = 'e1_expl_eff')
 
 
-(reg_pars_e1 <- plot_model(expl_eff, axis.labels =c('Improvement potential:\nSocial info', 'Trial', 'Social\ninfo', 'Improvement potential'), bpe = "mean", bpe.style = "dot", bpe.color='black', show.values = TRUE, vline.color='grey',  ci.lvl=.95, sort.est=FALSE, show.p=FALSE) +
+(reg_pars_ee1 <- plot_model(expl_eff, axis.labels =c('Improvement potential:\nSocial info', 'Trial', 'Social\ninfo', 'Improvement potential'), bpe = "mean", bpe.style = "dot", bpe.color='black', show.values = TRUE, vline.color='grey',  ci.lvl=.95, sort.est=FALSE, show.p=FALSE) +
     theme_classic()+
     xlab('')+
     ggtitle("Reward improvement"))
@@ -479,7 +472,7 @@ soc_value <- seq(0,50)/50
 test <- expand.grid(soc_value = soc_value,social=levels(data$social),taskType=levels(data$taskType),trial=min(data$trial):max(data$trial))
 preds = fitted(expl_eff, re_formula=NA,resp=c("soc_value","social","taskType"),newdata=test,probs=c(.025,.975))
 plotdata = data.frame(soc_value=test$soc_value,social=test$social,taskType=test$taskType,expl_eff=preds[,1],se=preds[,2],lower=preds[,3],upper=preds[,4])
-plotdata <- plotdata%>%group_by(social,taskType,soc_value)%>%summarize(expl_eff=mean(expl_eff),se=mean(se),lower=mean(lower),upper=mean(upper))
+plotdata <- plotdata%>%group_by(social,taskType,soc_value)%>%dplyr::summarize(expl_eff=mean(expl_eff),se=mean(se),lower=mean(lower),upper=mean(upper))
 plotdata$int <- interaction(plotdata$taskType,factor(plotdata$social))
 plotdata$int <- factor(plotdata$int,levels = c("individual.0","individual.1","social.0","social.1"))
 plotdata$int <- recode_factor(plotdata$int, individual.0 = "Solo + individual", 
@@ -504,7 +497,7 @@ data$int <- recode_factor(data$int, individual.0 = "Solo + individual",
     ylab("Reward improvement")+
     theme(legend.position= c(0.3,0.7),legend.background = element_blank(), legend.key = element_blank()))
 
-imp_supp <- cowplot::plot_grid(imp, reg_pars_ee,imp2,reg_pars_ee2,labels="auto",nrow=2)
+imp_supp <- cowplot::plot_grid(imp1, reg_pars_ee1,imp2,reg_pars_ee2,labels="auto",nrow=2)
 ggsave("./plots/imp_supp.pdf",width=14,height=7)
 
 
@@ -526,9 +519,9 @@ ggsave("./plots/imp_supp.pdf",width=14,height=7)
 #   scale_fill_manual(values=cbPalette)
 
 data <- read.csv("./Data/fit+pars_e1_nLL.csv")
-model_perf_e1 <- data%>%group_by(model)%>%summarize(pseudo_r2 = mean(r2))
+model_perf_e1 <- data%>%group_by(model)%>%dplyr::summarize(pseudo_r2 = mean(r2))
 data <- read.csv("./Data/fit+pars_e1.csv")
-nLL_e1 <- data%>%group_by(model)%>%summarize(nLL_mean = mean(fit))
+nLL_e1 <- data%>%group_by(model)%>%dplyr::summarize(nLL_mean = mean(fit))
 model_perf_e1$nLL_mean <- nLL_e1$nLL_mean
 
 data <- read.csv("./Data/fit+pars_e1_nLL.csv")
@@ -678,9 +671,9 @@ ggsave("./plots/e1_nLL_diff_zoom.pdf",width=3,height=1.5)
 
 
 data <- read.csv("./Data/fit+pars_e2_soc_nLL.csv")
-model_perf_e2 <- data%>%group_by(model)%>%summarize(pseudo_r2 = mean(r2))
+model_perf_e2 <- data%>%group_by(model)%>%dplyr::summarize(pseudo_r2 = mean(r2))
 data <- read.csv("./Data/fit+pars_e2_soc.csv")
-nLL_e2 <- data%>%group_by(model)%>%summarize(nLL_mean = mean(fit))
+nLL_e2 <- data%>%group_by(model)%>%dplyr::summarize(nLL_mean = mean(fit))
 model_perf_e2$nLL_mean <- nLL_e2$nLL_mean
 
 data <- read.csv("./Data/fit+pars_e2_soc_nLL.csv")
@@ -735,7 +728,7 @@ ggsave("./plots/S5_dotrange_mean.pdf",height=3.5,width=6)
 #######What is the right way to explore?###################
 #AS only for optimal pars
 data = read.csv("./Data/evoSim_ASonly.csv")
-means <- data%>%group_by(gen)%>%summarize(lambda = mean(lambda),beta=mean(beta),tau=mean(tau))
+means <- data%>%group_by(gen)%>%dplyr::summarize(lambda = mean(lambda),beta=mean(beta),tau=mean(tau))
 AS_lam <- ggplot(means,aes(x=gen,y = lambda))+
   geom_line(color="#999999")+
   theme_classic()+
@@ -767,7 +760,7 @@ AS_pars <- cowplot::plot_grid(AS_lam,AS_bet,AS_tau,nrow=1,labels="auto")
 
 #best eps_soc for pilot priors
 data = read.csv("./Data/evoSim_SGepswpilot.csv")
-means <- data%>%group_by(gen)%>%summarize(lambda = mean(lambda),beta=mean(beta),tau=mean(tau),eps_soc=mean(eps_soc))
+means <- data%>%group_by(gen)%>%dplyr::summarize(lambda = mean(lambda),beta=mean(beta),tau=mean(tau),eps_soc=mean(eps_soc))
 SG_lam <- ggplot(means,aes(x=gen,y = lambda))+
   geom_line(color="#56B4E9")+
   theme_classic()+
@@ -864,7 +857,7 @@ cols <- c("#66CC99","#009E73")
   coord_cartesian(ylim = c(0.5,0.57))+
   theme(legend.position="none"))
 #ggsave("./plots/VS_payoff_comp.pdf",height=5,width=5)
-meaned <- data%>%group_by(model,group,agent)%>%summarize(rew = mean(reward))
+meaned <- data%>%group_by(model,group,agent)%>%dplyr::summarize(rew = mean(reward))
 ttestPretty(subset(meaned,model=="VS_mem")$rew,subset(meaned,model=="VS_agnostic")$rew)
 
 
@@ -886,7 +879,7 @@ DB_comp <- ggplot(data,aes(x=value,y=reward,color=value,fill=value))+
   coord_cartesian(ylim = c(0.5,0.55))+
   theme(legend.position="none")
 #ggsave("./plots/DB_payoff_comp.pdf",height=5,width=5)
-meaned <- data%>%group_by(model,group,agent)%>%summarize(rew = mean(reward))
+meaned <- data%>%group_by(model,group,agent)%>%dplyr::summarize(rew = mean(reward))
 ttestPretty(subset(meaned,model=="DB")$rew,subset(meaned,model=="DB_val")$rew)
 
 #SG indiscriminate
@@ -907,7 +900,7 @@ cols <- c("#67B1C0","#56B4E9")
   coord_cartesian(ylim=c(0.5,0.6))+
   theme(legend.position="none"))
 #ggsave("./plots/SG_comp.pdf",height=5,width=5)
-meaned <- data%>%group_by(model,group,agent)%>%summarize(rew = mean(reward))
+meaned <- data%>%group_by(model,group,agent)%>%dplyr::summarize(rew = mean(reward))
 ttestPretty(subset(meaned,model=="SG")$rew,subset(meaned,model=="dummy")$rew)
 
 
@@ -927,7 +920,7 @@ pilot_data$id <-  pilot_data %>% group_by(agent,group) %>% group_indices()
 randomChoicePerc <- mean(subset(pilot_data,trial!=0)$isRandom)
 pilot_data <-  subset(pilot_data,trial!=0 & isRandom==0)
 
-meandata <- pilot_data%>%group_by(agent,group)%>%summarise(meanReward =mean(reward),soc_sd=mean(soc_sd,na.rm=T))
+meandata <- pilot_data%>%group_by(agent,group)%>%dplyr::summarize(meanReward =mean(reward),soc_sd=mean(soc_sd,na.rm=T))
 data <- merge(meandata,data,by=c("agent","group"))
 data$SG_best <- sapply(1:dim(data)[1], function(x) ifelse(data[x,"fit_SG"]==min(data[x,c("fit_AS","fit_DB","fit_VS","fit_SG")]),1,0))
 data$SG_best <- factor(data$SG_best)
@@ -976,7 +969,7 @@ pilot_data = pilot_data[order(pilot_data$agent,pilot_data$group,pilot_data$round
 randomChoicePerc <- mean(subset(pilot_data,trial!=0)$isRandom)
 pilot_data <-  subset(pilot_data,trial!=0 & isRandom==0)
 
-meandata <- pilot_data%>%group_by(agent,group,taskType)%>%summarise(meanReward =mean(reward),soc_sd=mean(soc_sd,na.rm=T))
+meandata <- pilot_data%>%group_by(agent,group,taskType)%>%dplyr::summarize(meanReward =mean(reward),soc_sd=mean(soc_sd,na.rm=T))
 data <- merge(subset(meandata,taskType=="social"),data,by=c("agent","group"))
 data$SG_best <- sapply(1:dim(data)[1], function(x) ifelse(data[x,"fit_SG"]==min(data[x,c("fit_AS","fit_DB","fit_VS","fit_SG")]),1,0))
 data$SG_best <- factor(data$SG_best)
@@ -1148,7 +1141,7 @@ pilot_data <- read.csv("./Data/e2_data.csv")
 pilot_data = pilot_data[order(pilot_data$agent,pilot_data$group,pilot_data$round,pilot_data$trial),]
 pilot_data <-  subset(pilot_data,trial!=0 & isRandom==0)
 
-meandata <- pilot_data%>%group_by(agent,group,taskType)%>%summarise(meanReward =mean(reward),soc_sd=mean(soc_sd,na.rm=T))
+meandata <- pilot_data%>%group_by(agent,group,taskType)%>%dplyr::summarize(meanReward =mean(reward),soc_sd=mean(soc_sd,na.rm=T))
 data <- merge(subset(meandata,taskType=="social"),data,by=c("agent","group"))
 data$SG_best <- sapply(1:dim(data)[1], function(x) ifelse(data[x,"fit_SG"]==min(data[x,c("fit_AS","fit_DB","fit_VS","fit_SG")]),1,0))
 data$SG_best <- factor(data$SG_best)
@@ -1225,3 +1218,117 @@ ttestPretty(subset(data,model=="SG"&SG_best==1)$par,mu=3.29)
 pars <- ggdraw(add_sub(pars, "SG Parameters", vpadding=grid::unit(0,"lines"),y=6, x=0.55, vjust=4.5))
 ggsave("./plots/pars_E2.pdf",width=7.5,height=5)
 
+#####
+#At what correlations does SG break?
+#####
+
+#no correlation
+data = read.csv("./Data/evoSim_corr00.csv")
+data$model = factor(data$model,levels=c("AS","DB","VS","SG"))
+data$mix =  factor(data$mix,levels=c("AS","DB","VS","SG","AS.DB","AS.VS","AS.SG","DB.VS","DB.SG","VS.SG",
+                                     "AS.DB.VS","AS.DB.SG","AS.VS.SG","DB.VS.SG","AS.DB.VS.SG"))
+data$corr <- 0.0
+counts <- data%>%group_by(gen,mix,model,corr)%>%dplyr::summarize(n=n())
+win_by_cor <- subset(counts,gen==499)
+rm(data)
+
+#corr=0.1
+data = read.csv("./Data/evoSim_corr01.csv")
+data$model = factor(data$model,levels=c("AS","DB","VS","SG"))
+data$mix =  factor(data$mix,levels=c("AS","DB","VS","SG","AS.DB","AS.VS","AS.SG","DB.VS","DB.SG","VS.SG",
+                                     "AS.DB.VS","AS.DB.SG","AS.VS.SG","DB.VS.SG","AS.DB.VS.SG"))
+data$corr <- 0.1
+counts <- data%>%group_by(gen,mix,model,corr)%>%dplyr::summarize(n=n())
+win_by_cor <- rbind(win_by_cor,subset(counts,gen==499))
+rm(data)
+
+#corr=0.2
+data = read.csv("./Data/evoSim_corr02.csv")
+data$model = factor(data$model,levels=c("AS","DB","VS","SG"))
+data$mix =  factor(data$mix,levels=c("AS","DB","VS","SG","AS.DB","AS.VS","AS.SG","DB.VS","DB.SG","VS.SG",
+                                     "AS.DB.VS","AS.DB.SG","AS.VS.SG","DB.VS.SG","AS.DB.VS.SG"))
+data$corr <- 0.2
+counts <- data%>%group_by(gen,mix,model,corr)%>%dplyr::summarize(n=n())
+win_by_cor <- rbind(win_by_cor,subset(counts,gen==499))
+rm(data)
+
+#corr=0.3
+data = read.csv("./Data/evoSim_corr03.csv")
+data$model = factor(data$model,levels=c("AS","DB","VS","SG"))
+data$mix =  factor(data$mix,levels=c("AS","DB","VS","SG","AS.DB","AS.VS","AS.SG","DB.VS","DB.SG","VS.SG",
+                                     "AS.DB.VS","AS.DB.SG","AS.VS.SG","DB.VS.SG","AS.DB.VS.SG"))
+data$corr <- 0.3
+counts <- data%>%group_by(gen,mix,model,corr)%>%dplyr::summarize(n=n())
+win_by_cor <- rbind(win_by_cor,subset(counts,gen==499))
+rm(data)
+
+#corr=0.4
+data = read.csv("./Data/evoSim_corr04.csv")
+data$model = factor(data$model,levels=c("AS","DB","VS","SG"))
+data$mix =  factor(data$mix,levels=c("AS","DB","VS","SG","AS.DB","AS.VS","AS.SG","DB.VS","DB.SG","VS.SG",
+                                     "AS.DB.VS","AS.DB.SG","AS.VS.SG","DB.VS.SG","AS.DB.VS.SG"))
+data$corr <- 0.4
+counts <- data%>%group_by(gen,mix,model,corr)%>%dplyr::summarize(n=n())
+win_by_cor <- rbind(win_by_cor,subset(counts,gen==499))
+rm(data)
+
+#corr=0.5
+data = read.csv("./Data/evoSim_corr05.csv")
+data$model = factor(data$model,levels=c("AS","DB","VS","SG"))
+data$mix =  factor(data$mix,levels=c("AS","DB","VS","SG","AS.DB","AS.VS","AS.SG","DB.VS","DB.SG","VS.SG",
+                                     "AS.DB.VS","AS.DB.SG","AS.VS.SG","DB.VS.SG","AS.DB.VS.SG"))
+data$corr <- 0.5
+counts <- data%>%group_by(gen,mix,model,corr)%>%dplyr::summarize(n=n())
+win_by_cor <- rbind(win_by_cor,subset(counts,gen==499))
+rm(data)
+
+#corr=0.6
+data = read.csv("./Data/evoSim.csv")
+data$model = factor(data$model,levels=c("AS","DB","VS","SG"))
+data$mix =  factor(data$mix,levels=c("AS","DB","VS","SG","AS.DB","AS.VS","AS.SG","DB.VS","DB.SG","VS.SG",
+                                     "AS.DB.VS","AS.DB.SG","AS.VS.SG","DB.VS.SG","AS.DB.VS.SG"))
+data$corr <- 0.6
+counts <- data%>%group_by(gen,mix,model,corr)%>%dplyr::summarize(n=n())
+win_by_cor <- rbind(win_by_cor,subset(counts,gen==499))
+rm(data)
+
+#corr=0.7
+data = read.csv("./Data/evoSim_corr07.csv")
+data$model = factor(data$model,levels=c("AS","DB","VS","SG"))
+data$mix =  factor(data$mix,levels=c("AS","DB","VS","SG","AS.DB","AS.VS","AS.SG","DB.VS","DB.SG","VS.SG",
+                                     "AS.DB.VS","AS.DB.SG","AS.VS.SG","DB.VS.SG","AS.DB.VS.SG"))
+data$corr <- 0.7
+counts <- data%>%group_by(gen,mix,model,corr)%>%dplyr::summarize(n=n())
+win_by_cor <- rbind(win_by_cor,subset(counts,gen==499))
+rm(data)
+
+#corr=0.8
+data = read.csv("./Data/evoSim_corr08.csv")
+data$model = factor(data$model,levels=c("AS","DB","VS","SG"))
+data$mix =  factor(data$mix,levels=c("AS","DB","VS","SG","AS.DB","AS.VS","AS.SG","DB.VS","DB.SG","VS.SG",
+                                     "AS.DB.VS","AS.DB.SG","AS.VS.SG","DB.VS.SG","AS.DB.VS.SG"))
+data$corr <- 0.8
+counts <- data%>%group_by(gen,mix,model,corr)%>%dplyr::summarize(n=n())
+win_by_cor <- rbind(win_by_cor,subset(counts,gen==499))
+rm(data)
+
+#corr=0.9
+data = read.csv("./Data/evoSim_corr09.csv")
+data$model = factor(data$model,levels=c("AS","DB","VS","SG"))
+data$mix =  factor(data$mix,levels=c("AS","DB","VS","SG","AS.DB","AS.VS","AS.SG","DB.VS","DB.SG","VS.SG",
+                                     "AS.DB.VS","AS.DB.SG","AS.VS.SG","DB.VS.SG","AS.DB.VS.SG"))
+data$corr <- 0.9
+counts <- data%>%group_by(gen,mix,model,corr)%>%dplyr::summarize(n=n())
+win_by_cor <- rbind(win_by_cor,subset(counts,gen==499))
+rm(data)
+
+ggplot(win_by_cor,aes(x=corr,y=n/1000,color=model,fill=model))+
+  stat_summary(geom = 'ribbon', fun.data = mean_cl_boot,alpha=0.3,color=NA)+
+  stat_summary(geom='line',fun=mean)+
+  theme_classic()+
+  scale_color_manual(values = cbPalette,name='Model')+ 
+  scale_fill_manual(values = cbPalette,name='Model')+ 
+  ylab('P(model) in final gen.')+
+  xlab('Environment correlation')+
+  theme(legend.position = c(0.9,0.5))
+ggsave('./plots/evoSim_winner_by_corr.pdf',width = 5,height = 2.5)
