@@ -21,7 +21,7 @@ saveAll <- F
 cbPalette <- c("#999999","#E69F00", "#009E73","#56B4E9", "#CC79A7", "#F0E442", "#0072B2", "#D55E00")#
 ####extra imports and functions #######
 source('statisticalTests.R')
-std <- function(a) sd(a) / sqrt(length(a))
+std <- function(a) sd(a,na.rm = T) / sqrt(length(a))
 
 run_model <- function(expr, modelName, path=".", reuse = TRUE) {
   path <- paste0(path,'/', modelName, ".brm")
@@ -1329,6 +1329,174 @@ ggplot(win_by_cor,aes(x=corr,y=n/1000,color=model,fill=model))+
   scale_color_manual(values = cbPalette,name='Model')+ 
   scale_fill_manual(values = cbPalette,name='Model')+ 
   ylab('P(model) in final gen.')+
-  xlab('Environment correlation')+
+  xlab('Social correlation')+
   theme(legend.position = c(0.9,0.5))
 ggsave('./plots/evoSim_winner_by_corr.pdf',width = 5,height = 2.5)
+
+
+#########
+#Behavioural signatures of the models (simulated)
+#########
+
+pilot_data <- read.csv("./Data/GP_het_400.csv")
+pilot_data = pilot_data[order(pilot_data$agent,pilot_data$group,pilot_data$round,pilot_data$trial),]
+
+meandata <- pilot_data%>%group_by(group,trial,model)%>%summarise(meanReward =mean(reward),coherence=mean(coherence), prev_rew = mean(prev_rew),
+                                                           search_dist=mean(search_dist),variance=mean(variance),
+                                                           soc_sd1 = mean(soc_sd1), soc_sd2 = mean(soc_sd2), soc_sd3 = mean(soc_sd3), soc_sd = mean(soc_sd),
+                                                           soc_rew1 = mean(soc_rew1), soc_rew2 = mean(soc_rew2),soc_rew3 = mean(soc_rew3),soc_rew = mean(soc_rew))
+
+cbPalette <- c("#999999","#E69F00", "#009E73","#56B4E9", "#CC79A7", "#F0E442", "#0072B2", "#D55E00")#
+
+(lc <- ggplot(meandata,aes(x=trial,y=meanReward,color = model, fill = model))+
+    geom_hline(yintercept=0.5, linetype="dashed",color="red",lwd=1)+
+    stat_summary(fun.data = mean_cl_boot, geom = 'ribbon', alpha = 0.2, color = NA)+
+    stat_summary(fun=mean,geom="line",lwd=1.25)+
+    theme_classic()+
+    scale_color_manual(values = cbPalette, name = "Model") +
+    scale_fill_manual(values = cbPalette, name = "Model") +
+    theme(legend.position="None")+
+    ylab("Average Reward")+
+    xlab("Trial"))
+if (saveAll){ggsave("./plots/lc.pdf")}
+
+meandata <- pilot_data%>%group_by(group,trial,model)%>%summarise(meanReward =mean(reward),coherence=mean(coherence), prev_rew = mean(prev_rew),
+                                                           search_dist=mean(search_dist),variance=mean(variance),
+                                                           soc_sd1 = mean(soc_sd1), soc_sd2 = mean(soc_sd2), soc_sd3 = mean(soc_sd3), soc_sd = mean(soc_sd),
+                                                           soc_rew1 = mean(soc_rew1), soc_rew2 = mean(soc_rew2),soc_rew3 = mean(soc_rew3),soc_rew = mean(soc_rew))
+
+
+(soc_sd_trial <- ggplot(meandata,aes(x=trial,y=soc_sd, color = model, fill = model))+
+    stat_summary(fun.data = mean_cl_boot, geom = 'ribbon', alpha = 0.2, color = NA)+
+    stat_summary(fun=mean,geom="line",lwd=1.25)+
+    theme_classic()+
+    scale_color_manual(values = cbPalette, name = "Model") +
+    scale_fill_manual(values = cbPalette, name = "Model") +
+    theme(legend.position="None")+
+    ylab("Social search distance")+
+    xlab("Trial"))
+if (saveAll){ggsave("./plots/soc_sd_pilot.pdf")}
+
+
+# Social search distance ~ previous reward ##############
+#Human Data
+data = read.csv("./Data/GP_het_400_regressable.csv")
+data$social = factor(data$social)
+data <- subset(data,isRandom==0)
+
+socAsoc <- c("dashed","solid")
+
+
+(sdist_srew <- ggplot(data, aes(x=soc_rew,y=soc_sd,color=model,fill=model,linetype=social))+
+  theme_classic()+
+  #stat_summary(data,mapping=aes(x = round(soc_rew*33)/33,y=soc_sd),fun = mean,geom='point',alpha=0.8)+
+  geom_smooth(method='lm')+
+  scale_linetype_manual(values=socAsoc,name="Information\nsource",labels=c("Individual","Social","Simulated asocial\nbaseline"))+
+  scale_color_manual(values = cbPalette, name = "Model") +
+  scale_fill_manual(values = cbPalette, name = "Model")+
+  xlab("Previous reward")+
+  ylab("Search Distance")+
+  guides(color = FALSE, fill = FALSE)+
+  theme(legend.position = c(0.25,0.25), legend.background = element_blank(), legend.key = element_blank())
+)
+#Social search distance split####
+data$dist <- sapply(1:dim(data)[1], function(x) ifelse(data[x,"soc_sd"]==0,"0",ifelse(data[x,"soc_sd"]==1,"1",ifelse(data[x,"soc_sd"]<3,"2",">=3"))))
+data$dist <- factor(data$dist,levels=c("0","1","2",">=3"))
+
+data$rew_bins <- round(data$soc_rew*50)/50
+pdata <- subset(data,social==1&!is.na(soc_rew)) #social==1&dist=='0'|social==1&dist=='1'
+
+freqs <- pdata %>%
+  group_by(model, dist, rew_bins) %>%
+  summarise(dist_count = n()) %>%
+  group_by(model, rew_bins) %>%
+  mutate(proportion = dist_count / sum(dist_count))
+
+VSSG <- c("#009E73","#56B4E9")#
+freqs$model <- factor(freqs$model,levels=c("AS","DB","VS","SG"))
+(soc_sd <- ggplot(subset(freqs,dist==0|dist==1),aes(x=rew_bins,y=proportion,color=model,fill=model,linetype=dist))+ # subset(freqs,dist!=">=3")
+    geom_smooth(method="lm")+
+    theme_classic()+
+    ylab("P(soc. search dist.)")+
+    xlab("Previous social reward")+
+    xlim(c(0.5,1))+
+    scale_fill_manual(values = cbPalette,name="Model")+
+    scale_color_manual(values = cbPalette,name="Model")+
+    scale_linetype_manual(values=socAsoc,name="Search dist.",labels=c("0","1"))) 
+
+(model_preds <- cowplot::plot_grid(lc,soc_sd_trial,sdist_srew,soc_sd,nrow=1,labels = 'auto',rel_widths = c(0.75,0.75,0.75,1.5)))
+ggsave("./plots/supp_model_preds.pdf",width = 12, height = 3.5)
+
+
+#E1R demo
+demo <- read.csv("./Data/e3_demo.csv")
+meanAge <- mean(as.numeric(demo$Age),na.rm=T)
+sdAge <- sd(as.numeric(demo$Age),na.rm=T)
+
+meanCompletion <- mean(demo$Time.taken,na.rm=T)/60
+semCompletion <- std(demo$Time.taken)/60
+
+meanPayout <- mean(demo$totalPayment,na.rm=T)
+semPayout <- std(demo$totalPayment)
+
+table(demo$Sex)
+
+
+#SG best fit across correlations
+
+e1_pxp <- read.csv("./Data/pxp_e1.csv")
+e1_pxp$corr <- "r=0.6"
+#e1_pxp <- subset(e1_pxp,model=="SG")
+e2_pxp <- read.csv("./Data/pxp_e2_soc.csv")
+e2_pxp$corr <- "r=0.6"
+#e2_pxp <- subset(e2_pxp,model=="SG")
+e3_pxp <- read.csv("./Data/pxp_e3.csv")
+e3_pxp$corr <- "r=0.1"
+#e3_pxp <- subset(e3_pxp,model=="SG")
+
+pxp <- rbind(e1_pxp,e2_pxp,e3_pxp)
+pxp$corr <- factor(pxp$corr,levels = c("r=0.1","r=0.6"))
+pxp$model <- factor(pxp$model,levels = c("AS","DB","VS","SG"))
+cbPalette <- c("#999999","#E69F00", "#009E73","#56B4E9", "#CC79A7", "#F0E442", "#0072B2", "#D55E00")#
+
+(pxp_over_corr <- ggplot(pxp,aes(x=corr,y=exceedance,color=model,fill=model,group = model))+
+    geom_bar(stat = "identity", position=position_dodge())+
+    theme_classic()+
+    #xlim(0,1)+
+    scale_color_manual(values = cbPalette, name = "Model") +
+    scale_fill_manual(values = cbPalette, name = "Model")+
+    xlab("Social correlation")+
+    ylab("pxp"))
+
+#extrapolating social noise across correlations
+e1_fits <- read.csv("./Data/model_fits_e1.csv")
+e1_fits$corr <- "r=0.6\n(N=110/260)"
+e1_SG <- subset(e1_fits,model=="SG")
+e2_fits <- read.csv("./Data/model_fits_e2_soc.csv")
+e2_fits$corr <- "r=0.6\n(N=110/260)"
+e2_SG <- subset(e2_fits,model=="SG")
+e3_fits <- read.csv("./Data/model_fits_e3.csv")
+e3_fits$corr <- "r=0.1\n(N=33/156)"
+e3_SG <- subset(e3_fits,model=="SG")
+avg_eps <- mean(e3_SG$par)
+
+SG_fits <- rbind(e1_SG,e2_SG,e3_SG)
+SG_fits$corr <- factor(SG_fits$corr,levels = c("r=0.1\n(N=33/156)","r=0.6\n(N=110/260)"))
+ttestPretty(subset(SG_fits,corr=="r=0.1\n(N=33/156)")$par,subset(SG_fits,corr=="r=0.6\n(N=110/260)")$par)
+noisep <- t.test(subset(SG_fits,corr=="r=0.1\n(N=33/156)")$par,subset(SG_fits,corr=="r=0.6\n(N=110/260)")$par,var.equal = T)$p.value
+(noise_over_corr <- ggplot(SG_fits,aes(x=corr,y=par))+
+  geom_beeswarm(alpha=0.3,color="#56B4E9",fill="#56B4E9")+
+  stat_summary(color="black")+
+    geom_signif(
+      comparisons = list(c("r=0.1\n(N=33/156)", "r=0.6\n(N=110/260)")),
+      color="black", annotations = paste0("p = ",sub("^0+", "", round(noisep,3))),
+      test = "t.test")+
+  theme_classic()+
+  ggtitle("Social noise for participants\nbest fit by SG")+
+  theme(plot.title = element_text(size=12,face="bold"))+
+  xlab("Social correlation")+
+  ylab("Social noise"))
+
+(humans_across_correlations <- cowplot::plot_grid(pxp_over_corr,noise_over_corr,nrow=1,labels="auto")
+)  
+ggsave("./plots/e3_res.pdf",width=6,height=2.5)

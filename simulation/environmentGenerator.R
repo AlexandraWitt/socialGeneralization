@@ -67,7 +67,7 @@ normalize <- function(x){(x-min(x))/(max(x)-min(x))}
 # Sample non-socially correlated environments from the GP prior
 #########################################################################################################################
 #Parameters
-n_envs <- 10
+n_envs <- 3
 # compute kernel on pairwise values
 Sigma <- rbf_D(xstar,l=lambda)
 # sample from multivariate normal with mean zero, sigma = sigma
@@ -86,9 +86,9 @@ for (i in 1:n_envs){
 }
 #Save plots
 payoffplots <- cowplot::plot_grid(plotlist = plot_list, ncol = 8)
-ggsave('plots/M0_c09.pdf', payoffplots, width = 12, height = 8)
+ggsave('plots/M0exp_c01_demo.pdf', payoffplots, width = 12, height = 8)
 #Save environments
-write_json(environmentList, 'environments/M0_c09_parent.json')
+write_json(environmentList, 'environments/M0exp_c01_demo_parent.json')
 
 
 #########################################################################################################################
@@ -99,16 +99,16 @@ write_json(environmentList, 'environments/M0_c09_parent.json')
 #Simulation parameters
 genNum <- 5000000
 n_players <- 4
-n_envs <- 10
-correlationThreshold <- .9
+n_envs <- 3
+correlationThreshold <- .1
 tolerance <- .05
-childNames = c('A', 'B', 'C', 'D')
+childNames = c('A_exp_demo', 'B_exp_demo', 'C_exp_demo', 'D_exp_demo')
 
 # compute kernel on pairwise values
 Sigma_social <- rbf_D(xstar,l=lambda)
 
 #M0 generated above are the canonical environments
-M <-fromJSON("environments/M0_c09_parent.json", flatten=TRUE) #load from above
+M <-fromJSON("environments/M0exp_c01_demo_parent.json", flatten=TRUE) #load from above
 
 childEnvList = list(A=list(), B=list(), C=list(), D=list())
 plot_list = list(list(), list(), list(), list())
@@ -163,12 +163,12 @@ for (i in 1:n_envs){
 for (child in childNames){
   i <- match(child, childNames)
   payoffplots <- cowplot::plot_grid(plotlist = plot_list[[i]], ncol = 8)
-  ggsave(paste0('plots/', child,'_c09.pdf'), payoffplots, width = 12, height = 8)  
+  ggsave(paste0('plots/', child,'_c01_demo.pdf'), payoffplots, width = 12, height = 8)  
 }
 
 #Save environments
 for (child in childNames){
-  write_json(childEnvList[[child]], paste0('environments/', child,'_c09.json'))
+  write_json(childEnvList[[child]], paste0('environments/', child,'_c01_demo.json'))
 }
  
 # #########################################################################################################################
@@ -394,7 +394,7 @@ for (child in childNames){
 envs <- c('A','B','C', 'D')
 envList <- vector('list',length(envs))
 for (env in envs){
-  envList[[match(env,envs)]] <- fromJSON(paste0("environments/",env,"_lambda0_soc06.json"), flatten=TRUE)
+  envList[[match(env,envs)]] <- fromJSON(paste0("environments/",env,"_exp_demo_c01_demo.json"), flatten=TRUE)
 }
 
 #child-child-cors
