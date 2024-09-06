@@ -1,6 +1,6 @@
 # socialGeneralization
 
-This repository contains all data and code necessary to reproduce the results of **Flexible integration of social information despite interindividual differences in reward** (Witt, Toyokawa, Lala, Gaissmaier & Wu, 2024), in which we investigated social learning in correlated reward environments. The code is designed to be run from the top directory.
+This repository contains all data and code necessary to reproduce the results of **Humans flexibly integrate social information despite interindividual differences in reward** (Witt, Toyokawa, Lala, Gaissmaier & Wu, 2024), in which we investigated social learning in correlated reward environments. The code is designed to be run from the top directory.
 
 ## ./simulation
 
